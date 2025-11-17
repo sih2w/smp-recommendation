@@ -1,12 +1,12 @@
 from typing import List
-from scripts.recommendation import Song
+from scripts.recommend import Song
 import pandas as pd
 
 
 class PlaylistFunctions:
     @staticmethod
     def Generate(mood: str = "Happy"):
-        df = pd.read_csv(filepath_or_buffer="../data/songs.csv", delimiter="\t")
+        df = pd.read_csv(filepath_or_buffer="../data/songs/songs.csv", delimiter="\t")
         result = df[df["Mood"] == mood]
         songs: List[Song] = []
 

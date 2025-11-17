@@ -10,4 +10,4 @@ class Song(TypedDict):
 class SongFunctions:
     @staticmethod
     def GetSongId(song: Song):
-        return str.replace(song["Title"] + " " + song["Artist"][0], " ", "")
+        return str.replace(song["Title"] + " " + song["Artist"][0], " ", "_")

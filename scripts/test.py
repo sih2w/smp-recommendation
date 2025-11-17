@@ -2,7 +2,7 @@ from typing import List
 from scripts.choices import ChoiceFunctions, WeightedKeys
 from scripts.history import HistoryFunctions, History
 from scripts.playlist import PlaylistFunctions
-from scripts.recommendation import RecommendationFunctions
+from scripts.recommend import RecommendationFunctions
 from scripts.song import Song, SongFunctions
 from scripts.user import UserFunctions
 from numpy.random import Generator, PCG64
@@ -32,6 +32,7 @@ class TestFunctions:
 
         song = ChoiceFunctions.GetKey(song_chances, generator)
         action = ChoiceFunctions.GetKey(action_chances, generator)
+        song_id = SongFunctions.GetSongId(song)
 
         HistoryFunctions.UpdatePrevious(history, song)
 
@@ -40,27 +41,30 @@ class TestFunctions:
         else:
             HistoryFunctions.Increment(history, "Finished", song)
 
-            songId = SongFunctions.GetSongId(song)
-
             if action == "Like":
-                history["Liked"][songId] = True
-                history["Disliked"][songId] = False
+                history["Liked"][song_id] = True
+                history["Disliked"][song_id] = False
             elif action == "Dislike":
-                history["Liked"][songId] = False
-                history["Disliked"][songId] = True
+                history["Liked"][song_id] = False
+                history["Disliked"][song_id] = True
             elif action == "Favorite":
-                history["Favorite"][songId] = True
+                history["Favorite"][song_id] = True
 
+        return song_id
 
 if __name__ == "__main__":
-    history = HistoryFunctions.Create()
+    user_id = "test"
+    history = HistoryFunctions.Load(user_id)
     songs = PlaylistFunctions.Generate("Happy")
     generator = Generator(PCG64(0))
 
-    for episode in range(10):
-        TestFunctions.Step(history, songs, generator)
+    for episode in range(3):
+        song_id = TestFunctions.Step(history, songs, generator)
         TestFunctions.OutputHistory(history)
         TestFunctions.OutputCurrentSongChances(
             RecommendationFunctions.GetSongChances(history, songs)
         )
 
+        print("Playing song: " + song_id)
+
+    HistoryFunctions.Save(user_id, history)
