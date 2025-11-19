@@ -1,5 +1,5 @@
 class MoodService:
-    Moods = [
+    moods = [
         "HAPPY",
         "SAD",
         "CHILL",
@@ -13,7 +13,7 @@ class MoodService:
     ]
 
     @staticmethod
-    def GetMood(mood: str) -> str:
-        if mood in MoodService.Moods:
+    def get_mood(mood: str) -> str:
+        if mood in MoodService.moods:
             return mood
-        return MoodService.Moods[-1]
+        return MoodService.moods[-1]

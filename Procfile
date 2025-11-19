@@ -1,1 +1,1 @@
-web: gunicorn -k quart.worker -b 0.0.0.0:5000 app:app
+web: gunicorn -k quart.worker -b 0.0.0.0:8080 app:app

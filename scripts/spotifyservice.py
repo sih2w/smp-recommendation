@@ -20,20 +20,20 @@ class Song(TypedDict):
 
 
 class SpotifyService:
-    ClientId = os.getenv("CLIENT_ID")
-    ClientSecret = os.getenv("CLIENT_SECRET")
-    AccessToken = None
-    TokenExpiry = None
+    client_id = os.getenv("CLIENT_ID")
+    client_secret = os.getenv("CLIENT_SECRET")
+    access_token = None
+    token_expiry = None
 
     @staticmethod
-    async def Authenticate():
-        if SpotifyService.TokenValid():
+    async def authenticate():
+        if SpotifyService.token_valid():
             return True, ""
 
         try:
             headers = {
                 "Authorization": "Basic " + base64.b64encode(
-                    f"{SpotifyService.ClientId}:{SpotifyService.ClientSecret}".encode("utf-8")
+                    f"{SpotifyService.client_id}:{SpotifyService.client_secret}".encode("utf-8")
                 ).decode("utf-8"),
                 "Content-Type": "application/x-www-form-urlencoded",
             }
@@ -44,8 +44,8 @@ class SpotifyService:
                 async with session.post(url, headers=headers, data=body) as response:
                     if response.status == 200:
                         data = await response.json()
-                        SpotifyService.AccessToken = data["access_token"]
-                        SpotifyService.TokenExpiry = datetime.now() + timedelta(seconds=data.get("expires_in", 3600))
+                        SpotifyService.access_token = data["access_token"]
+                        SpotifyService.token_expiry = datetime.now() + timedelta(seconds=data.get("expires_in", 3600))
                         return True, ""
                     else:
                         return False, await response.text()
@@ -53,62 +53,62 @@ class SpotifyService:
             return False, str(e)
 
     @staticmethod
-    def TokenValid():
-        if SpotifyService.AccessToken is None:
+    def token_valid():
+        if SpotifyService.access_token is None:
             return False
 
-        if SpotifyService.TokenExpiry is None:
+        if SpotifyService.token_expiry is None:
             return False
 
-        return datetime.now() < SpotifyService.TokenExpiry
+        return datetime.now() < SpotifyService.token_expiry
 
     @staticmethod
-    def ToSong(track: Track, mood: str) -> Song:
+    def to_song(track: Track, mood: str) -> Song:
         return {
-            "Id": SpotifyService.GetTrackId(track),
-            "Mood": MoodService.GetMood(mood),
-            "Title": SpotifyService.GetTitle(track),
-            "Artists": SpotifyService.GetArtists(track),
-            "ImageUrl": SpotifyService.GetImageUrl(track),
-            "Album": SpotifyService.GetAlbum(track),
-            "AudioUrl": SpotifyService.GetAudioUrl(track),
+            "Id": SpotifyService.get_track_id(track),
+            "Mood": MoodService.get_mood(mood),
+            "Title": SpotifyService.get_title(track),
+            "Artists": SpotifyService.get_artists(track),
+            "ImageUrl": SpotifyService.get_image_url(track),
+            "Album": SpotifyService.get_album(track),
+            "AudioUrl": SpotifyService.get_audio_url(track),
         }
 
     @staticmethod
-    def GetTrackId(track: Track) -> str:
+    def get_track_id(track: Track) -> str:
         return track.get("id", "")
 
     @staticmethod
-    def GetAudioUrl(track: Track) -> str:
+    def get_audio_url(track: Track) -> str:
         return track.get("preview_url", "preview_url")
 
     @staticmethod
-    def GetAlbum(track: Track) -> str:
+    def get_album(track: Track) -> str:
         return track.get("album", {}).get("name", "")
 
     @staticmethod
-    def GetImageUrl(track: Track) -> str:
+    def get_image_url(track: Track) -> str:
         images = track.get("album", {}).get("images", [])
         image_url = images[0].get("url", "") if images else ""
         return image_url
 
     @staticmethod
-    def GetTitle(track: Track) -> str:
+    def get_title(track: Track) -> str:
         return track.get("name", "")
 
     @staticmethod
-    def GetArtists(track: Dict[str, Any]) -> List[str]:
+    def get_artists(track: Dict[str, Any]) -> List[str]:
         return [str(artist.get("name", "")) for artist in track.get("artists", []) if artist.get("name")]
 
     @staticmethod
-    async def Search(query: str, limit: int, mood: str) -> Tuple[List[Song], str]:
-        success, message = await SpotifyService.Authenticate()
+    async def search(query: str, limit: int, mood: str) -> Tuple[List[Song], str]:
+        success, message = await SpotifyService.authenticate()
         if not success:
             return [], message
 
         try:
             url = "https://api.spotify.com/v1/search"
-            headers = {"Authorization": f"Bearer {SpotifyService.AccessToken}"}
+            headers = {"Authorization": f"Bearer {SpotifyService.access_token}"}
             params = {
                 "q": query,
                 "type": "track",
@@ -116,7 +116,7 @@ class SpotifyService:
                 "limit": str(max(1, min(limit, 100)))
             }
 
-            mood = MoodService.GetMood(mood)
+            mood = MoodService.get_mood(mood)
 
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers, params=params) as response:
@@ -124,7 +124,7 @@ class SpotifyService:
                         data = await response.json()
                         items = data.get("tracks", {}).get("items", [])
                         songs = [
-                            SpotifyService.ToSong(item, mood) for item in items
+                            SpotifyService.to_song(item, mood) for item in items
                         ]
                         print(songs)
                         return songs, ""
@@ -134,12 +134,12 @@ class SpotifyService:
         return [], ""
 
     @staticmethod
-    async def GetPlaylist(mood: str, limit: int) -> Tuple[List[Song], str]:
-        success, message = await SpotifyService.Authenticate()
+    async def get_playlist(mood: str, limit: int) -> Tuple[List[Song], str]:
+        success, message = await SpotifyService.authenticate()
         if not success:
             return [], message
 
-        mood = MoodService.GetMood(mood)
+        mood = MoodService.get_mood(mood)
 
         mapping = {
             "HAPPY": "HAPPY UPBEAT POP",
@@ -154,5 +154,5 @@ class SpotifyService:
             "NOSTALGIC": "NOSTALGIC THROWBACK RETRO"
         }
 
-        return await SpotifyService.Search(mapping[mood], limit, mood)
+        return await SpotifyService.search(mapping[mood], limit, mood)
 

@@ -11,10 +11,10 @@ class WeightedKeys(TypedDict):
 
 class RandomService:
     @staticmethod
-    def GetKey(weighted_keys: WeightedKeys, generator: Generator):
+    def get_key(weighted_keys: WeightedKeys, generator: Generator):
         return generator.choice(a=weighted_keys["Keys"], p=weighted_keys["Chances"])
 
     @staticmethod
-    def Normalize(chances: List[float]):
+    def normalize(chances: List[float]):
         total_sum = sum(chances)
         return [x / total_sum for x in chances]

@@ -16,40 +16,40 @@ History: TypeAlias = Dict[str, MoodHistory]
 
 
 class HistoryService:
-    Cache: Dict[str, History] = {}
+    cache: Dict[str, History] = {}
 
     @staticmethod
-    def GetHistory(user_id: str) -> History:
-        if user_id not in HistoryService.Cache:
-            HistoryService.Cache[user_id] = HistoryService.Load(user_id)
-        history = HistoryService.Cache[user_id]
+    def get_history(user_id: str) -> History:
+        if user_id not in HistoryService.cache:
+            HistoryService.cache[user_id] = HistoryService.load(user_id)
+        history = HistoryService.cache[user_id]
         return history
 
     @staticmethod
-    def GetUserFilePath(user_id):
+    def get_user_file_path(user_id):
         return f"../data/users/{user_id}.json"
 
     @staticmethod
-    def Reset(user_id):
-        history = HistoryService.Create()
-        HistoryService.Save(user_id, history)
+    def reset(user_id):
+        history = HistoryService.create()
+        HistoryService.save(user_id, history)
         return history
 
     @staticmethod
-    def Load(user_id: str) -> History:
+    def load(user_id: str) -> History:
         try:
-            with open(HistoryService.GetUserFilePath(user_id), "r") as f:
+            with open(HistoryService.get_user_file_path(user_id), "r") as f:
                 return json.loads(f.read())
         except FileNotFoundError:
-            return HistoryService.Create()
+            return HistoryService.create()
 
     @staticmethod
-    def Save(user_id: str, history: History) -> None:
-        with open(HistoryService.GetUserFilePath(user_id), "w") as f:
+    def save(user_id: str, history: History) -> None:
+        with open(HistoryService.get_user_file_path(user_id), "w") as f:
             f.write(json.dumps(history))
 
     @staticmethod
-    def Create():
+    def create():
         return {
             mood: {
                 "Liked": {},
@@ -58,5 +58,5 @@ class HistoryService:
                 "Skipped": {},
                 "Finished": {},
                 "Previous": [],
-            } for mood in MoodService.Moods
+            } for mood in MoodService.moods
         }

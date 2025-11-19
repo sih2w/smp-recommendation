@@ -5,7 +5,7 @@ from scripts.randomservice import WeightedKeys, RandomService
 
 class RecommendationService:
     @staticmethod
-    def GetSongChance(history: History, mood: str, song_id: str):
+    def get_song_chance(history: History, mood: str, song_id: str):
         chance = 0.50
 
         if song_id in history[mood]["Disliked"]:
@@ -31,16 +31,16 @@ class RecommendationService:
         return chance
 
     @staticmethod
-    def GetSongChances(history: History, mood: str, song_ids: List[str]):
+    def get_song_chances(history: History, mood: str, song_ids: List[str]):
         song_chances: WeightedKeys = {
             "Keys": [],
             "Chances": [],
         }
 
         for song_id in song_ids:
-            chance = RecommendationService.GetSongChance(history, mood, song_id)
+            chance = RecommendationService.get_song_chance(history, mood, song_id)
             song_chances["Keys"].append(song_id)
             song_chances["Chances"].append(chance)
-        song_chances["Chances"] = RandomService.Normalize(song_chances["Chances"])
+        song_chances["Chances"] = RandomService.normalize(song_chances["Chances"])
 
         return song_chances
