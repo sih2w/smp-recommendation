@@ -2,8 +2,8 @@ import base64
 import aiohttp
 from typing import TypedDict, List, Any, Dict, Tuple, TypeAlias
 from datetime import datetime, timedelta
-from moodservice import MoodService
-import os
+from services.moodservice import MoodService
+from os import getenv
 
 
 Track: TypeAlias = Dict[str, Any]
@@ -20,8 +20,8 @@ class Song(TypedDict):
 
 
 class SpotifyService:
-    client_id = os.getenv("CLIENT_ID")
-    client_secret = os.getenv("CLIENT_SECRET")
+    client_id = getenv("CLIENT_ID")
+    client_secret = getenv("CLIENT_SECRET")
     access_token = None
     token_expiry = None
 
@@ -126,7 +126,6 @@ class SpotifyService:
                         songs = [
                             SpotifyService.to_song(item, mood) for item in items
                         ]
-                        print(songs)
                         return songs, ""
         except Exception as e:
             return [], str(e)
@@ -140,19 +139,6 @@ class SpotifyService:
             return [], message
 
         mood = MoodService.get_mood(mood)
+        keywords = MoodService.get_keywords(mood)
 
-        mapping = {
-            "HAPPY": "HAPPY UPBEAT POP",
-            "SAD": "SAD EMOTIONAL HEARTACHE",
-            "CHILL": "LOFI CHILL RELAXING",
-            "ENERGETIC": "ENERGETIC WORKOUT POP",
-            "ROMANTIC": "ROMANTIC LOVE HEART",
-            "ANGRY": "ANGER METAL ROCK SHOUTING",
-            "PEACEFUL": "PEACE RELAX CALM",
-            "PARTY": "PARTY DANCE EDM",
-            "MOTIVATIONAL": "INSPIRE CINEMATIC MOTIVATIONAL",
-            "NOSTALGIC": "NOSTALGIC THROWBACK RETRO"
-        }
-
-        return await SpotifyService.search(mapping[mood], limit, mood)
-
+        return await SpotifyService.search(keywords, limit, mood)

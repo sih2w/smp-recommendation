@@ -1,185 +1,154 @@
-from quart import Quart, jsonify, request
-from moodservice import MoodService
-from randomservice import RandomService
-from historyservice import HistoryService, History
-from spotifyservice import SpotifyService
-from recommendationservice import RecommendationService
+from functools import wraps
+from os import getenv
+from quart import Quart, jsonify, abort
+from services.randomservice import RandomService
+from services.historyservice import HistoryService, History
+from services.spotifyservice import SpotifyService
+from services.recommendationservice import RecommendationService
 from numpy.random import Generator, PCG64
 
 
 app = Quart(__name__)
 
 
-def add_to_previously_played(history: History, mood: str, song_id: str):
-    history[mood]["Previous"].insert(0, song_id)
-    if len(history[mood]["Previous"]) > 3:
-        history[mood]["Previous"].pop()
+def verify_request(func):
+    @wraps(func)
+    async def decorated_function(key, *args, **kwargs):
+        if key != getenv("ACCESS_KEY"):
+            abort(403, description="Invalid key.")
+        return await func(*args, **kwargs)
+    return decorated_function
 
 
-@app.route("/skip-song", methods=["GET"])
-def skip_song():
+@app.route("/skip-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>", methods=["GET"])
+@verify_request
+async def skip_song(user_id: str, song_id: str, mood: str):
     try:
-        user_id = request.args.get("UserId")
-        song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-
-        history: History = HistoryService.get_history(user_id)
-        if not song_id in history[mood]["Skipped"]:
-            history[mood]["Skipped"][song_id] = 0
-        history[mood]["Skipped"][song_id] += 1
-
-        add_to_previously_played(history, mood, song_id)
-
         return jsonify({
-            "Success": True,
+            "success": True,
+            "result": HistoryService.skip_song(user_id, song_id, mood)
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/finish-song", methods=["GET"])
-def finish_song():
+@app.route("/finish-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>", methods=["GET"])
+@verify_request
+async def finish_song(user_id: str, song_id: str, mood: str):
     try:
-        user_id = request.args.get("UserId")
-        song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-
-        history: History = HistoryService.get_history(user_id)
-        if not song_id in history[mood]["Finished"]:
-            history[mood]["Finished"][song_id] = 0
-        history[mood]["Finished"][song_id] += 1
-
-        add_to_previously_played(history, mood, song_id)
-
         return jsonify({
-            "Success": True,
+            "success": True,
+            "result": HistoryService.finish_song(user_id, song_id, mood)
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/like", methods=["GET"])
-def like_song():
+@app.route("/like-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>/<int:like>", methods=["GET"])
+@verify_request
+async def like_song(user_id: str, song_id: str, mood: str, like: int):
     try:
-        user_id = request.args.get("UserId")
-        song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-        like = request.args.get("Like", default=True)
-
-        history: History = HistoryService.get_history(user_id)
-        history[mood]["Liked"][song_id] = like
         return jsonify({
-            "Success": True,
+            "success": True,
+            "result": HistoryService.like_song(user_id, song_id, mood, like == 1)
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/dislike", methods=["GET"])
-def dislike_song():
+@app.route("/dislike-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>/<int:dislike>", methods=["GET"])
+@verify_request
+async def dislike_song(user_id: str, song_id: str, mood: str, dislike: int):
     try:
-        user_id = request.args.get("UserId")
-        song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-        disliked = request.args.get("Dislike", default=True)
-
-        history: History = HistoryService.get_history(user_id)
-        history[mood]["Disliked"][song_id] = disliked
         return jsonify({
-            "Success": True,
+            "success": True,
+            "result": HistoryService.dislike_song(user_id, song_id, mood, dislike == 1)
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/favorite", methods=["GET"])
-async def favorite_song():
+@app.route("/favorite-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>/<int:favorite>", methods=["GET"])
+@verify_request
+async def favorite_song(user_id: str, song_id: str, mood: str, favorite: int):
     try:
-        user_id = request.args.get("UserId")
-        song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-        favorite = request.args.get("Favorite", default=True)
-
-        history: History = HistoryService.get_history(user_id)
-        history[mood]["Favorite"][song_id] = favorite
         return jsonify({
-            "Success": True,
+            "success": True,
+            "result": HistoryService.favorite_song(user_id, song_id, mood, favorite == 1)
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/playlist", methods=["GET"])
-async def get_playlist():
+@app.route("/playlist/<string:key>/<string:mood>/<int:limit>", methods=["GET"])
+@verify_request
+async def playlist(mood: str, limit: int):
     try:
-        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
-        limit = int(request.args.get("Limit", default=0))
-
-        playlist, message = await SpotifyService.get_playlist(mood, limit)
-
+        result, message = await SpotifyService.get_playlist(mood, limit)
         if message == "":
             return jsonify({
-                "Success": True,
-                "Playlist": playlist,
+                "success": True,
+                "result": result,
             })
         else:
             raise Exception(message)
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
 
 
-@app.route("/next-song", methods=["GET"])
-def next_song():
+@app.route("/next-song/<string:key>/<string:user_id>/<string:mood>", methods=["GET"])
+@verify_request
+async def next_song(user_id: str, mood: str):
     try:
-        user_id = request.args.get("UserId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
-        song_ids = request.args.get("SongsIds", [])
-        history: History = HistoryService.get_history(user_id)
+        playlist, message = await SpotifyService.get_playlist(mood, 10)
+        song_ids = [song["Id"] for song in playlist]
+        history: History = await HistoryService.get_history(user_id)
 
         song_chances = RecommendationService.get_song_chances(history, mood, song_ids)
         song_id = RandomService.get_key(song_chances, Generator(PCG64()))
 
         return jsonify({
-            "SongId": song_id,
-            "Success": True,
+            "result": song_id,
+            "success": True,
         })
     except Exception as e:
         return jsonify({
-            "Success": False,
-            "Error": str(e),
+            "success": False,
+            "result": str(e),
         })
+
+
+@app.route("/<string:key>", methods=["GET"])
+@verify_request
+async def index_secure():
+    return jsonify({
+        "success": True,
+    })
 
 
 @app.route("/", methods=["GET"])
 async def index():
     return jsonify({
-        "Success": True,
+        "success": True,
     })
-
-
-@app.teardown_appcontext
-def cleanup(exception=None):
-    for user_id, history in HistoryService.cache.items():
-        HistoryService.save(user_id, history)
-        print(f"Saved {user_id}'s history.")
 
 
 if __name__ == "__main__":
