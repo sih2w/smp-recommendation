@@ -21,7 +21,7 @@ def skip_song():
     try:
         user_id = request.args.get("UserId")
         song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
 
         history: History = HistoryService.get_history(user_id)
         if not song_id in history[mood]["Skipped"]:
@@ -45,7 +45,7 @@ def finish_song():
     try:
         user_id = request.args.get("UserId")
         song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
 
         history: History = HistoryService.get_history(user_id)
         if not song_id in history[mood]["Finished"]:
@@ -69,7 +69,7 @@ def like_song():
     try:
         user_id = request.args.get("UserId")
         song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
         like = request.args.get("Like", default=True)
 
         history: History = HistoryService.get_history(user_id)
@@ -89,7 +89,7 @@ def dislike_song():
     try:
         user_id = request.args.get("UserId")
         song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
         disliked = request.args.get("Dislike", default=True)
 
         history: History = HistoryService.get_history(user_id)
@@ -109,7 +109,7 @@ async def favorite_song():
     try:
         user_id = request.args.get("UserId")
         song_id = request.args.get("SongId")
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
         favorite = request.args.get("Favorite", default=True)
 
         history: History = HistoryService.get_history(user_id)
@@ -124,10 +124,10 @@ async def favorite_song():
         })
 
 
-@app.route("/get-playlist", methods=["GET"])
+@app.route("/playlist", methods=["GET"])
 async def get_playlist():
     try:
-        mood = MoodService.get_mood(request.args.get("Mood"))
+        mood = MoodService.get_mood(request.args.get("Mood", "HAPPY"))
         limit = int(request.args.get("Limit", default=0))
 
         playlist, message = await SpotifyService.get_playlist(mood, limit)
