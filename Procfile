@@ -1,1 +1,1 @@
-web: gunicorn -k quart.worker -b 0.0.0.0:8080 app:app
+web: hypercorn app:app --bind 0.0.0.0:8080

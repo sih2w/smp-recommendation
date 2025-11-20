@@ -1,9 +1,9 @@
 from quart import Quart, jsonify, request
-from scripts.moodservice import MoodService
-from scripts.randomservice import RandomService
-from scripts.historyservice import HistoryService, History
-from scripts.spotifyservice import SpotifyService
-from scripts.recommendationservice import RecommendationService
+from moodservice import MoodService
+from randomservice import RandomService
+from historyservice import HistoryService, History
+from spotifyservice import SpotifyService
+from recommendationservice import RecommendationService
 from numpy.random import Generator, PCG64
 
 
@@ -168,8 +168,19 @@ def next_song():
         })
 
 
+@app.route("/", methods=["GET"])
+async def index():
+    return jsonify({
+        "Success": True,
+    })
+
+
 @app.teardown_appcontext
 def cleanup(exception=None):
     for user_id, history in HistoryService.cache.items():
         HistoryService.save(user_id, history)
         print(f"Saved {user_id}'s history.")
+
+
+if __name__ == "__main__":
+    app.run()

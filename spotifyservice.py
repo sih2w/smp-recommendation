@@ -2,7 +2,7 @@ import base64
 import aiohttp
 from typing import TypedDict, List, Any, Dict, Tuple, TypeAlias
 from datetime import datetime, timedelta
-from scripts.moodservice import MoodService
+from moodservice import MoodService
 import os
 
 

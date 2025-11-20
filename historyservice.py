@@ -1,6 +1,6 @@
 import json
 from typing import TypedDict, Dict, List, TypeAlias
-from scripts.moodservice import MoodService
+from moodservice import MoodService
 
 
 class MoodHistory(TypedDict):

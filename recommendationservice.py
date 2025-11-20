@@ -1,6 +1,6 @@
 from typing import List
-from scripts.historyservice import History
-from scripts.randomservice import WeightedKeys, RandomService
+from historyservice import History
+from randomservice import WeightedKeys, RandomService
 
 
 class RecommendationService:
