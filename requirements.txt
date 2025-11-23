@@ -2,3 +2,4 @@ Quart==0.20.0
 numpy==2.3.5
 aiohttp==3.13.2
 motor==3.7.1
+quart-cors==0.8.0
