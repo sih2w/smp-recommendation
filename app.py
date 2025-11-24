@@ -37,6 +37,22 @@ async def skip_song(user_id: str, song_id: str, mood: str):
         })
 
 
+@app.route("/search/<string:key>/<string:query>/<int:limit>/<string:mood>", methods=["GET"])
+@verify_request
+async def search(query: str, limit: int, mood: str):
+    try:
+        result, message = SpotifyService.search(query, limit, mood)
+        return jsonify({
+            "success": True,
+            "result": result,
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "result": str(e),
+        })
+
+
 @app.route("/finish-song/<string:key>/<string:user_id>/<string:song_id>/<string:mood>", methods=["GET"])
 @verify_request
 async def finish_song(user_id: str, song_id: str, mood: str):
