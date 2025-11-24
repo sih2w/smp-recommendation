@@ -42,10 +42,11 @@ async def skip_song(user_id: str, song_id: str, mood: str):
 async def search(query: str, limit: int, mood: str):
     try:
         result, message = SpotifyService.search(query, limit, mood)
-        return jsonify({
-            "success": True,
-            "result": result,
-        })
+        if message == "":
+            return jsonify({
+                "success": True,
+                "result": result,
+            })
     except Exception as e:
         return jsonify({
             "success": False,
