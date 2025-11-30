@@ -52,6 +52,48 @@ async def history(user_id: str):
         })
 
 
+@app.route("/liked/<string:key>/<string:user_id>", methods=["GET"])
+@verify_request
+async def liked(user_id: str):
+    try:
+        history = await HistoryService.get_history(user_id)
+        liked = []
+        for category in history:
+            for song in history[category]["liked"]:
+                if not song in liked:
+                    liked.append(song)
+        return jsonify({
+            "success": True,
+            "result": liked,
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "result": str(e),
+        })
+
+
+@app.route("/previous/<string:key>/<string:user_id>", methods=["GET"])
+@verify_request
+async def previous(user_id: str):
+    try:
+        history = await HistoryService.get_history(user_id)
+        previous = []
+        for category in history:
+            for song in history[category]["previous"]:
+                if not song in previous:
+                    previous.append(song)
+        return jsonify({
+            "success": True,
+            "result": previous,
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "result": str(e),
+        })
+
+
 @app.route("/search/<string:key>/<string:query>/<int:limit>/<string:mood>", methods=["GET"])
 @verify_request
 async def search(query: str, limit: int, mood: str):
